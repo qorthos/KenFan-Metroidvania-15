@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "com.qorthos.bracedframework": "https://github.com/qorthos/com.qorthos.bracedframework.git",
+	"com.unity.nuget.newtonsoft-json": "2.0.0",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.ads": "3.7.5",
     "com.unity.analytics": "3.6.12",
