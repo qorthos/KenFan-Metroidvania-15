@@ -17,20 +17,31 @@ public class GenericCharacterController : MonoBehaviour
 
     [SerializeField]
     Transform groundCheck;
+    [SerializeField]
+    LayerMask _groundMask;
     int _jumpCheckLayerMask;
 
     bool jump = false;
+    bool _isGrounded;
     Vector2 _currentDirection = Vector2.zero;
+    Vector2 _lastMoveDirection;
+    Vector2 _characterSize;
     Rigidbody _rigidbody;
+    CapsuleCollider _collider;
 
     void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
+        _collider = GetComponent<CapsuleCollider>();
+        _characterSize = new Vector2(_collider.radius, _collider.height);
         _jumpCheckLayerMask = ~LayerMask.NameToLayer("Ground");
     }
 
     void FixedUpdate()
     {
+        (bool isGrounded, bool onSlope, Vector3 slopeAngle, GameObject standingOn) = CheckIsGrounded();
+        this._isGrounded = isGrounded;
+
         Vector3 newVelocityGoal = direction2DToDirection3D(_currentDirection) * maxVelocity;
         // Maintain vertical velocity from jumping/falling
         newVelocityGoal.y = this._rigidbody.velocity.y;
@@ -53,17 +64,27 @@ public class GenericCharacterController : MonoBehaviour
             _jumpTimer -= Time.deltaTime;
         }
 
+        if (onSlope) newVelocity = Vector3.ProjectOnPlane(newVelocityGoal, slopeAngle);
+
         _rigidbody.velocity = newVelocity;
     }
 
     public void Move(Vector2 direction)
     {
         this._currentDirection = direction.normalized;
+
+        if (Vector2.Distance(direction, Vector2.zero) <= 0f)
+        {
+            return;
+        }
+
+        transform.rotation = Quaternion.Euler(0, Vector3.SignedAngle(Vector3.forward, new Vector3(direction.x, 0, direction.y), Vector3.up), 0);
+        _lastMoveDirection = direction;
     }
 
     public void Jump()
     {
-        if (IsGrounded() && _jumpTimer <= 0)
+        if (this._isGrounded && _jumpTimer <= 0)
         {
             jump = true;
         }
@@ -78,4 +99,35 @@ public class GenericCharacterController : MonoBehaviour
     {
         return Physics.CheckSphere(groundCheck.position, 0.05f, _jumpCheckLayerMask);
     }
+
+    private (bool, bool, Vector3, GameObject) CheckIsGrounded()
+    {
+        Debug.DrawRay(groundCheck.position + new Vector3(0, 0.1f, 0), Vector3.down * 1f, Color.red, 0.1f);
+
+        if (Physics.Raycast(groundCheck.position + new Vector3(0, 0.1f, 0), Vector3.down, out RaycastHit hit, 1f, _groundMask))
+            return CalculateHitPosition(hit);
+
+        //Walking forward
+        if (Physics.Raycast(groundCheck.position + new Vector3(0, 0.1f, 0) + (transform.forward * (_characterSize.x * 0.5f)), Vector3.down, out hit, 1f, _groundMask))
+            return CalculateHitPosition(hit);
+
+        //Leaving the ground
+        if (Physics.Raycast(groundCheck.position + new Vector3(0, 0.1f, 0) + (transform.forward * (_characterSize.x * -0.5f)), Vector3.down, out hit, 1f, _groundMask))
+            return CalculateHitPosition(hit);
+
+        return (false, false, Vector3.zero, null);
+    }
+
+    private (bool, bool, Vector3, GameObject) CalculateHitPosition(RaycastHit hit)
+    {
+        if (groundCheck.position.y - hit.point.y > 0.001f)
+            return (false, false, Vector3.zero, null);
+
+        var onSlope = Vector3.Distance(hit.normal, Vector3.up) > 0f;
+        var slopeAngle = hit.normal;
+        var groundTarget = hit.transform.gameObject;      //Footstep sounds, that kind of thing
+
+        return (true, onSlope, slopeAngle, groundTarget);
+    }
+
 }

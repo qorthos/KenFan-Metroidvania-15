@@ -31,7 +31,8 @@ public class CharacterInputManager : MonoBehaviour
     void Update()
     {
         _characterController.Move(_inputManager.Player.Move.ReadValue<Vector2>().Rotate(inputRotation));
-        if(_inputManager.Player.Jump.IsPressed())
+
+        if (_inputManager.Player.Jump.IsPressed())
         {
             _characterController.Jump();
         }
