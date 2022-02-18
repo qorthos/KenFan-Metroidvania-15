@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class CharacterController : MonoBehaviour
+public class GenericCharacterController : MonoBehaviour
 {
     [SerializeField]
     float maxVelocity = 10f;
@@ -23,14 +23,12 @@ public class CharacterController : MonoBehaviour
     Vector2 _currentDirection = Vector2.zero;
     Rigidbody _rigidbody;
 
-    // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
         _jumpCheckLayerMask = ~LayerMask.NameToLayer("Ground");
     }
 
-    // Update is called once per frame
     void FixedUpdate()
     {
         Vector3 newVelocityGoal = direction2DToDirection3D(_currentDirection) * maxVelocity;
@@ -38,6 +36,12 @@ public class CharacterController : MonoBehaviour
         newVelocityGoal.y = this._rigidbody.velocity.y;
         // Transition toward new velocity at a fixed percentage of remaining difference per tick
         Vector3 newVelocity = Vector3.Lerp(this._rigidbody.velocity, newVelocityGoal, accelerationPercentagePerSecond * Time.deltaTime);
+        // Get rid of weird tiny float differences and infinite lerping problems
+        if(newVelocity.Approximately(newVelocityGoal))
+        {
+            newVelocity = newVelocityGoal;
+        }
+
         if (jump)
         {
             jump = false;

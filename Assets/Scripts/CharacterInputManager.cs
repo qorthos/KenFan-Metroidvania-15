@@ -2,19 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(GenericCharacterController))]
 public class CharacterInputManager : MonoBehaviour
 {
     [SerializeField]
     readonly float inputRotation = -45f;
 
     InputManager _inputManager;
-    CharacterController _characterController;
+    GenericCharacterController _characterController;
 
     void Awake()
     {
         _inputManager = new InputManager();
-        _characterController = GetComponent<CharacterController>();
+        _characterController = GetComponent<GenericCharacterController>();
     }
 
     void OnEnable()
