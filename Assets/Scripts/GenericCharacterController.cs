@@ -13,6 +13,8 @@ public class GenericCharacterController : MonoBehaviour
     float jumpVelocity = 10f;
     [SerializeField]
     float jumpCooldown = 0.25f;
+
+
     float _jumpTimer = 0f;
 
     [SerializeField]
@@ -24,7 +26,6 @@ public class GenericCharacterController : MonoBehaviour
     bool jump = false;
     bool _isGrounded;
     Vector2 _currentDirection = Vector2.zero;
-    Vector2 _lastMoveDirection;
     Vector2 _characterSize;
     Rigidbody _rigidbody;
     CapsuleCollider _collider;
@@ -79,7 +80,6 @@ public class GenericCharacterController : MonoBehaviour
         }
 
         transform.rotation = Quaternion.Euler(0, Vector3.SignedAngle(Vector3.forward, new Vector3(direction.x, 0, direction.y), Vector3.up), 0);
-        _lastMoveDirection = direction;
     }
 
     public void Jump()
@@ -102,8 +102,6 @@ public class GenericCharacterController : MonoBehaviour
 
     private (bool, bool, Vector3, GameObject) CheckIsGrounded()
     {
-        Debug.DrawRay(groundCheck.position + new Vector3(0, 0.1f, 0), Vector3.down * 1f, Color.red, 0.1f);
-
         if (Physics.Raycast(groundCheck.position + new Vector3(0, 0.1f, 0), Vector3.down, out RaycastHit hit, 1f, _groundMask))
             return CalculateHitPosition(hit);
 
